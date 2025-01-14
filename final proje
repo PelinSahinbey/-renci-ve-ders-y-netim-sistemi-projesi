@@ -1,0 +1,251 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using Newtonsoft.Json;
+
+// Interface: IPerson (Giriş yapma ve bilgi gösterme)
+public interface IPerson
+{
+    void Login();
+    void BilgiGoster();
+}
+
+// Temel sınıf: Kisi
+public abstract class Kisi : IPerson
+{
+    public string Ad { get; set; }
+    public string Soyad { get; set; }
+
+    public Kisi(string ad, string soyad)
+    {
+        Ad = ad;
+        Soyad = soyad;
+    }
+
+    public void Login()
+    {
+        Console.WriteLine($"{Ad} {Soyad} giriş yaptı.");
+    }
+
+    public abstract void BilgiGoster();  // Türetilmiş sınıflarda özelleştirilecek
+}
+
+// Öğrenci sınıfı
+public class Ogrenci : Kisi
+{
+    public string OgrenciNo { get; set; }
+    public List<Ders> Dersler { get; set; }
+
+    public Ogrenci(string ad, string soyad, string ogrenciNo)
+        : base(ad, soyad)
+    {
+        OgrenciNo = ogrenciNo;
+        Dersler = new List<Ders>();
+    }
+
+    public void DersEkle(Ders ders)
+    {
+        if (!Dersler.Contains(ders))
+        {
+            Dersler.Add(ders);
+            Console.WriteLine($"{Ad} {Soyad}, {ders.Ad} dersine kaydoldu.");
+        }
+        else
+        {
+            Console.WriteLine($"{Ad} {Soyad} zaten {ders.Ad} dersine kayıtlı.");
+        }
+    }
+
+    public override void BilgiGoster()
+    {
+        Console.WriteLine($"Öğrenci Adı: {Ad} {Soyad}");
+        Console.WriteLine($"Öğrenci No: {OgrenciNo}");
+        Console.WriteLine("Kayıtlı Dersler:");
+        foreach (var ders in Dersler)
+        {
+            Console.WriteLine($"- {ders.Ad} ({ders.Kredi} kredi)");
+        }
+    }
+}
+
+// Öğretim Görevlisi sınıfı
+public class OgretimGorevlisi : Kisi
+{
+    public string SicilNo { get; set; }
+    public List<Ders> Dersler { get; set; }
+
+    public OgretimGorevlisi(string ad, string soyad, string sicilNo)
+        : base(ad, soyad)
+    {
+        SicilNo = sicilNo;
+        Dersler = new List<Ders>();
+    }
+
+    public void DersEkle(Ders ders)
+    {
+        if (!Dersler.Contains(ders))
+        {
+            Dersler.Add(ders);
+            Console.WriteLine($"{Ad} {Soyad}, {ders.Ad} dersini veriyor.");
+        }
+        else
+        {
+            Console.WriteLine($"{Ad} {Soyad} zaten {ders.Ad} dersini veriyor.");
+        }
+    }
+
+    public override void BilgiGoster()
+    {
+        Console.WriteLine($"Öğretim Görevlisi Adı: {Ad} {Soyad}");
+        Console.WriteLine($"Sicil No: {SicilNo}");
+        Console.WriteLine("Verdiği Dersler:");
+        foreach (var ders in Dersler)
+        {
+            Console.WriteLine($"- {ders.Ad} ({ders.Kredi} kredi)");
+        }
+    }
+}
+
+// Ders sınıfı
+public class Ders
+{
+    public string Ad { get; set; }
+    public int Kredi { get; set; }
+    public OgretimGorevlisi OgretimGorevlisi { get; set; }
+    public List<Ogrenci> Ogrenciler { get; set; }
+
+    public Ders(string ad, int kredi, OgretimGorevlisi ogretimGorevlisi)
+    {
+        Ad = ad;
+        Kredi = kredi;
+        OgretimGorevlisi = ogretimGorevlisi;
+        Ogrenciler = new List<Ogrenci>();
+    }
+
+    public void KayitOl(Ogrenci ogrenci)
+    {
+        if (!Ogrenciler.Contains(ogrenci))
+        {
+            Ogrenciler.Add(ogrenci);
+            ogrenci.DersEkle(this);
+            Console.WriteLine($"{ogrenci.Ad} {ogrenci.Soyad} {Ad} dersine kaydoldu.");
+        }
+        else
+        {
+            Console.WriteLine($"{ogrenci.Ad} {ogrenci.Soyad} zaten bu derse kayıtlı.");
+        }
+    }
+
+    public void DersBilgisi()
+    {
+        Console.WriteLine($"Ders Adı: {Ad}");
+        Console.WriteLine($"Kredi: {Kredi}");
+        Console.WriteLine($"Öğretim Görevlisi: {OgretimGorevlisi.Ad} {OgretimGorevlisi.Soyad}");
+        Console.WriteLine("Kayıtlı Öğrenciler:");
+        foreach (var ogrenci in Ogrenciler)
+        {
+            Console.WriteLine($"- {ogrenci.Ad} {ogrenci.Soyad}");
+        }
+    }
+}
+
+public class Program
+{
+    static void Main(string[] args)
+    {
+        // Öğretim Görevlisi oluşturuluyor
+        var ogretimGorevlisi = new OgretimGorevlisi("Emrah", "Sarıçiçek", "98765");
+
+        // Dersler oluşturuluyor
+        var ders1 = new Ders("Nesneye Dayalı Programlama", 4, ogretimGorevlisi);
+        var ders2 = new Ders("Görsel Programlama", 3, ogretimGorevlisi);
+
+        // Öğrenciler oluşturuluyor
+        var ogrenci1 = new Ogrenci("Pelin", "Şahinbey", "2023001");
+        var ogrenci2 = new Ogrenci("Mina", "Özgül", "2023002");
+
+        // Öğrencilerin derslere kaydolması
+        ders1.KayitOl(ogrenci1);
+        ders1.KayitOl(ogrenci2);
+        ders2.KayitOl(ogrenci1);
+
+        // Ekranda işlem
+        Console.WriteLine("1- Öğrenci Kayıt Etme");
+        Console.WriteLine("2- Öğretim Görevlisi Kayıt Etme");
+        Console.WriteLine("3- Ders Kayıt Etme");
+        Console.WriteLine("4- Kayıtlı Öğrencileri Göster");
+        Console.WriteLine("5- Kayıtlı Dersleri Göster");
+        Console.WriteLine("6- Çıkış");
+        int secim = Convert.ToInt32(Console.ReadLine());
+
+        switch (secim)
+        {
+            case 1:
+                Console.WriteLine("Öğrenci Bilgilerini Girin:");
+                Console.WriteLine("Ad:");
+                string ogrenciAd = Console.ReadLine();
+                Console.WriteLine("Soyad:");
+                string ogrenciSoyad = Console.ReadLine();
+                Console.WriteLine("Öğrenci No:");
+                string ogrenciNo = Console.ReadLine();
+                Ogrenci yeniOgrenci = new Ogrenci(ogrenciAd, ogrenciSoyad, ogrenciNo);
+                SaveDataToJson("ogrenciler.json", yeniOgrenci);
+                break;
+            case 2:
+                Console.WriteLine("Öğretim Görevlisi Bilgilerini Girin:");
+                Console.WriteLine("Ad:");
+                string ogretimAd = Console.ReadLine();
+                Console.WriteLine("Soyad:");
+                string ogretimSoyad = Console.ReadLine();
+                Console.WriteLine("Sicil No:");
+                string sicilNo = Console.ReadLine();
+                OgretimGorevlisi yeniOgretimGorevlisi = new OgretimGorevlisi(ogretimAd, ogretimSoyad, sicilNo);
+                SaveDataToJson("ogretimGorevlisi.json", yeniOgretimGorevlisi);
+                break;
+            case 3:
+                Console.WriteLine("Ders Bilgilerini Girin:");
+                Console.WriteLine("Ders Adı:");
+                string dersAdi = Console.ReadLine();
+                Console.WriteLine("Kredi:");
+                int kredi = Convert.ToInt32(Console.ReadLine());
+                Ders yeniDers = new Ders(dersAdi, kredi, ogretimGorevlisi);
+                SaveDataToJson("dersler.json", yeniDers);
+                break;
+            case 4:
+                LoadDataFromJson<Ogrenci>("ogrenciler.json");
+                break;
+            case 5:
+                LoadDataFromJson<Ders>("dersler.json");
+                break;
+            case 6:
+                Environment.Exit(0);
+                break;
+        }
+    }
+
+    // JSON'a veri kaydetme fonksiyonu
+    public static void SaveDataToJson<T>(string fileName, T data)
+    {
+        string json = JsonConvert.SerializeObject(data, Formatting.Indented);
+        File.WriteAllText(fileName, json);
+        Console.WriteLine($"{fileName} dosyasına kayıt yapıldı.");
+    }
+
+    // JSON'dan veri okuma fonksiyonu
+    public static void LoadDataFromJson<T>(string fileName)
+    {
+        if (File.Exists(fileName))
+        {
+            string json = File.ReadAllText(fileName);
+            var data = JsonConvert.DeserializeObject<List<T>>(json);
+            foreach (var item in data)
+            {
+                Console.WriteLine(item.ToString());
+            }
+        }
+        else
+        {
+            Console.WriteLine($"Dosya {fileName} bulunamadı.");
+        }
+    }
+}
